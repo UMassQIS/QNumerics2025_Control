@@ -1,7 +1,9 @@
 import Pkg; Pkg.activate(@__DIR__); Pkg.instantiate()
 
 using Piccolo
+using Piccolissimo
 using LinearAlgebra
+using QuantumToolbox
 using CairoMakie
 
 # ── System ────────────────────────────────────────────────────────────────────
@@ -34,19 +36,24 @@ sys = QuantumSystem(H_drift, [X1, Y1, X2, Y2, X3, Y3], fill(1.0, 6))
 
 # ── Optimization ──────────────────────────────────────────────────────────────
 
-N  = 751
-Δt = 0.4
+N  = 50
+Δt = 0.2
 T  = Δt * (N - 1)
 
-pulse = ZeroOrderPulse(0.01 * randn(6, N), collect(range(0, T, length=N)))
-qtraj = KetTrajectory(sys, pulse, ψ0, ψ_ghz)
-qcp   = SmoothPulseProblem(qtraj, N)
+pulse = CubicSplinePulse(0.1 * randn(6, N), zeros(6, N), collect(range(0, T, length=N)))
 
-solve!(qcp, max_iter=200, options=IpoptOptions(eval_hessian=true))
+qtraj = KetTrajectory(sys, pulse, ψ0, ψ_ghz)
+integrator = SplineIntegrator(qtraj, N)
+
+ucp = SplinePulseProblem(qtraj, N; integrator=integrator)
+
+solve!(ucp, max_iter=500, options=IpoptOptions(eval_hessian=true))
 
 # ── Visualization ─────────────────────────────────────────────────────────────
 
-traj = get_trajectory(qcp)
+traj = get_trajectory(ucp)
+
+Piccolo.Rollouts.fidelity(ucp)
 
 # Population of each computational basis state over the trajectory
 fig = plot(
@@ -56,3 +63,4 @@ fig = plot(
     use_autolimits = true,
 )
 display(fig)
+animate_wigner(traj, mode=:record, filename="ghz_state_prep_wigner.gif", fps=10)
