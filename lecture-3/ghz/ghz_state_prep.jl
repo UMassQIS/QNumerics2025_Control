@@ -1,4 +1,6 @@
-import Pkg; Pkg.activate(@__DIR__); Pkg.instantiate()
+import Pkg;
+Pkg.activate(joinpath(@__DIR__, ".."));
+Pkg.instantiate()
 
 using Piccolo
 using Piccolissimo
