@@ -68,8 +68,9 @@ solve!(qcp_cat, max_iter=200, options=IpoptOptions(eval_hessian=true))
 fig_qt = plot_wigner(ψ_cat3_qt)
 display(fig_qt[1])
 
+Piccolo.Rollouts.fidelity(qcp_cat)
+
 # Optimized final state Wigner
 traj_cat = get_trajectory(qcp_cat)
 fig_opt = plot_wigner(traj_cat, N_cat)
-plot_state_populations(traj_cat, N_cat)
-animate_wigner(traj_cat)
+animate_wigner(traj_cat, mode=:record, filename="cat_state_prep_wigner.gif", fps=10)
